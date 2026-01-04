@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆解谜游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 只用一种圆润可爱字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* 添加幼圆字体定义 */
+        @font-face {
+            font-family: 'YouYuan';
+            src: local('YouYuan'),
+                local('幼圆'),
+                local('Microsoft YaHei');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 可爱字体栈 */
+            font-family: 'YouYuan', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            min-height: 100vh;
+            border-radius: 0px;
+            padding: 20px;
+            box-shadow: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 页面通用样式 */
+        .page {
+            display: none;
+            opacity: 0;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            transform-origin: center;
+            padding: 20px;
+        }
+
+        .page.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0) scale(1) rotate(0);
+            animation: pageEnter 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .page.exiting {
+            animation: pageExit 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+
+        /* 动画关键帧 */
+        @keyframes pageEnter {
+            0% {
+                opacity: 0;
+                transform: translateX(100px) scale(0.9) rotateY(10deg);
+                filter: blur(5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0) scale(1) rotateY(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes pageExit {
+            0% {
+                opacity: 1;
+                transform: translateX(0) scale(1) rotateY(0);
+                filter: blur(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateX(-100px) scale(0.9) rotateY(-10deg);
+                filter: blur(5px);
+            }
+        }
+
+        @keyframes textSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes buttonFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes messageSlide {
+            0% {
+                opacity: 0;
+                top: 0;
+                transform: translateX(-50%) scale(0.8);
+            }
+
+            15% {
+                opacity: 1;
+                top: 30px;
+                transform: translateX(-50%) scale(1);
+            }
+
+            85% {
+                opacity: 1;
+                top: 30px;
+                transform: translateX(-50%) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                top: 30px;
+                transform: translateX(-50%) scale(0.8);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: scale(1) rotate(0);
+            }
+
+            25% {
+                transform: scale(1.2) rotate(10deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(-10deg);
+            }
+
+            75% {
+                transform: scale(1.2) rotate(10deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                text-shadow: 0 0 15px rgba(255, 20, 147, 0.7);
+                transform: scale(1);
+            }
+
+            100% {
+                text-shadow: 0 0 25px rgba(255, 20, 147, 1), 0 0 35px rgba(255, 20, 147, 0.5);
+                transform: scale(1.03);
+            }
+        }
+
+        @keyframes clickEffect {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes videoAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 文字样式 */
+        .main-text {
+            font-size: 4.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ff1493;
+            text-shadow: 0 0 15px rgba(255, 20, 147, 0.7), 0 0 25px rgba(255, 20, 147, 0.4);
+            margin-bottom: 40px;
+            animation: pulse 2s infinite alternate;
+            /* 可爱字体 */
+            font-family: 'ZCOOL QingKe HuangYou', 'Zhi Mang Xing', cursive, sans-serif !important;
+        }
+
+        .sub-text {
+            font-size: 1.8rem;
+            color: #ffffff;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            animation: textSlideUp 0.8s 0.2s both;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .small-text {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-top: 20px;
+            line-height: 1.7;
+            animation: textSlideUp 0.8s 0.4s both;
+            font-weight: 300;
+        }
+
+        /* 按钮样式 */
+        .next-btn {
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            font-size: 1.4rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+            font-weight: 600;
+            letter-spacing: 1px;
+            animation: buttonFloat 2s infinite ease-in-out;
+            font-weight: 500;
+            letter-spacing: 0.8px;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(255, 20, 147, 0.6);
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            animation: none;
+        }
+
+        .next-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* 输入框样式 */
+        .input-container {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 500px;
+            animation: textSlideUp 0.8s 0.6s both;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 1.3rem;
+            border-radius: 15px;
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-top: 15px;
+            transition: all 0.3s;
+            font-weight: 400;
+        }
+
+        .input-box:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: scale(1.02);
+        }
+
+        /* 页面2.5: 成功展示页面 */
+        .success-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+
+        .text-side,
+        .image-side {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-text {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #ff1493;
+            text-shadow: 0 0 15px rgba(255, 20, 147, 0.7);
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            animation: pulse 2s infinite alternate;
+            white-space: nowrap;
+        }
+
+        .success-message {
+            font-size: 1.8rem;
+            color: #ffffff;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        .image-frame {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 15px;
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .image-frame:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(255, 20, 147, 0.4);
+            border-color: #ff69b4;
+        }
+
+        .image-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+        }
+
+        .image-placeholder i {
+            font-size: 4rem;
+            color: rgba(255, 20, 147, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .image-placeholder p {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .custom-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 13px;
+        }
+
+        .image-caption {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-top: 20px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* 聊天记录图片页面样式 */
+        .chat-container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .chat-title {
+            font-size: 2rem;
+            color: #ff1493;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(255, 20, 147, 0.5);
+        }
+
+        .chat-images {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            width: 100%;
+            min-width: 2000px;
+        }
+
+        .chat-image-frame {
+            width: 280px;
+            height: 550px;
+            border-radius: 15px;
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .chat-image-frame:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(255, 20, 147, 0.4);
+            border-color: #ff69b4;
+        }
+
+        .chat-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #page35 {
+            overflow: visible !important;
+            justify-content: flex-start !important;
+            /* 从顶部开始 */
+            padding-top: 40px;
+            /* 顶部留点空间 */
+        }
+
+        #page35 .chat-container {
+            max-width: none !important;
+            width: auto !important;
+        }
+
+        /* 4. 调整标题和按钮间距 */
+        .chat-title {
+            font-size: 2rem;
+            color: #ff1493;
+            margin-bottom: 20px !important;
+            /* 从40px减小到20px */
+            text-shadow: 0 0 10px rgba(255, 20, 147, 0.5);
+        }
+
+        #page35 .next-btn {
+            margin-top: 20px !important;
+            /* 从30px减小到20px */
+        }
+
+        /* 留言系统样式 */
+        .message-system {
+            max-width: 800px;
+            width: 100%;
+            margin-top: 30px;
+        }
+
+        .message-title {
+            font-size: 2.2rem;
+            color: #ff1493;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 20, 147, 0.5);
+        }
+
+        .message-form {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(255, 20, 147, 0.3);
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ff69b4;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            min-height: 150px;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.3);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+            font-weight: 500;
+            letter-spacing: 0.8px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.6);
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+        }
+
+        .message-success {
+            font-size: 1.3rem;
+            color: #4CAF50;
+            margin-top: 20px;
+            display: none;
+        }
+
+        /* 管理员查看留言样式 */
+        .admin-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 20, 147, 0.3);
+        }
+
+        .admin-title {
+            font-size: 1.8rem;
+            color: #ff1493;
+            margin-bottom: 20px;
+        }
+
+        .message-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .message-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff1493;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .message-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                width: 95%;
+            }
+
+            .page {
+                top: 25px;
+                left: 25px;
+                right: 25px;
+                bottom: 25px;
+            }
+
+            .main-text {
+                font-size: 3.2rem;
+            }
+
+            .sub-text {
+                font-size: 1.5rem;
+            }
+
+            .success-text {
+                font-size: 3rem;
+            }
+
+            .image-frame {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+
+            .chat-title {
+                font-size: 1.6rem;
+            }
+
+            .chat-image-frame {
+                width: 200px;
+                height: 400px;
+                flex-shrink: 0;
+            }
+
+            .message-title {
+                font-size: 1.8rem;
+            }
+
+            .message-form {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-text {
+                font-size: 2.5rem;
+            }
+
+            .sub-text {
+                font-size: 1.3rem;
+            }
+
+            .success-text {
+                font-size: 2.5rem;
+            }
+
+            .image-frame {
+                height: 200px;
+            }
+
+            .chat-images {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                gap: 15px;
+            }
+
+            .chat-image-frame {
+                width: 160px;
+                height: 300px;
+                flex-shrink: 0;
+            }
+
+            .chat-title {
+                font-size: 1.4rem;
+            }
+
+            /* GitHub留言样式 */
+            .github-messages {
+                margin-top: 30px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .github-message-item {
+                background-color: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-left: 4px solid #ff1493;
+            }
+
+            .github-message-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                font-size: 0.9rem;
+                color: #cccccc;
+            }
+
+            .github-message-content {
+                font-size: 1.1rem;
+                line-height: 1.5;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            .loading-messages {
+                text-align: center;
+                padding: 30px;
+                color: #ff69b4;
+                font-size: 1.2rem;
+            }
+
+            .error-message {
+                color: #f44336;
+                text-align: center;
+                margin: 20px 0;
+            }
+
+            .view-on-github {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 10px 20px;
+                background-color: rgba(255, 20, 147, 0.2);
+                color: #ff69b4;
+                border-radius: 20px;
+                text-decoration: none;
+                transition: all 0.3s;
+            }
+
+            .view-on-github:hover {
+                background-color: rgba(255, 20, 147, 0.3);
+                transform: translateY(-2px);
+            }
+        }
+
+        .github-messages {
+            margin-top: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .github-message-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff1493;
+        }
+
+        .github-message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .github-message-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .loading-messages {
+            text-align: center;
+            padding: 30px;
+            color: #ff69b4;
+            font-size: 1.2rem;
+        }
+
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .view-on-github {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: rgba(255, 20, 147, 0.2);
+            color: #ff69b4;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .view-on-github:hover {
+            background-color: rgba(255, 20, 147, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 页面11图片悬停效果 */
+        #page11 [style*="width: 22vw"]:hover {
+            transform: translateY(-15px) scale(1.08);
+            border-color: #ff1493;
+            box-shadow: 0 20px 40px rgba(255, 20, 147, 0.5);
+            z-index: 10;
+        }
+
+        #page11 [style*="width: 22vw"]:hover img {
+            transform: scale(1.05);
+        }
+
+        /* 色块样式 */
+        .color-blocks-container {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            width: 100%;
+            max-width: 600px;
+            animation: textSlideUp 0.8s 0.4s both;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-x: visible
+        }
+
+        .color-block {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 3px solid transparent;
+            transform-origin: center;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .color-block:hover {
+            transform: scale(1.08) rotate(5deg);
+            border-color: white;
+        }
+
+        .color-block.active {
+            transform: scale(1.1) rotate(0);
+            border-color: white;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
+        }
+
+        .color-block.clicked {
+            animation: clickEffect 0.3s ease;
+        }
+
+        /* 信封样式 */
+        .envelope-container {
+            margin-top: 40px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            animation: textSlideUp 0.8s 0.4s both;
+        }
+
+        .envelope {
+            width: 280px;
+            height: 180px;
+            background: linear-gradient(135deg, #ff1493, #ff69b4);
+            position: relative;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(255, 20, 147, 0.4);
+            transition: all 0.5s ease;
+        }
+
+        .envelope:before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            border-top: 90px solid #ff1493;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        .envelope:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            border-bottom: 90px solid #ff69b4;
+            bottom: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        .envelope .letter {
+            position: absolute;
+            background-color: white;
+            width: 260px;
+            height: 160px;
+            top: 10px;
+            left: 10px;
+            border-radius: 5px;
+            z-index: 1;
+            transition: all 0.5s ease 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .envelope .letter i {
+            font-size: 3.5rem;
+            color: #ff1493;
+            margin-bottom: 15px;
+        }
+
+        .envelope .letter p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff1493;
+        }
+
+        .envelope-container:hover .envelope {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 25px 45px rgba(255, 20, 147, 0.6);
+        }
+
+        .envelope-container:hover .letter {
+            transform: translateY(-70px);
+        }
+
+        /* 视频播放器样式 */
+        .video-container {
+            display: none;
+            margin-top: 40px;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+            animation: videoAppear 1s 0.3s both;
+        }
+
+        .video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        /* 提示消息样式 */
+        .message {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+            animation: messageSlide 3s ease forwards;
+        }
+
+        .success {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.5);
+        }
+
+        .error {
+            background: linear-gradient(45deg, #f44336, #FF9800);
+            color: white;
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.5);
+        }
+
+        /* 装饰元素 */
+        .decoration {
+            position: absolute;
+            z-index: 0;
+        }
+
+        .circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 20, 147, 0.2) 0%, rgba(255, 20, 147, 0) 70%);
+            position: absolute;
+            transition: all 1.5s ease;
+        }
+
+        .circle-1 {
+            top: -50px;
+            left: -50px;
+        }
+
+        .circle-2 {
+            bottom: -60px;
+            right: -40px;
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 装饰元素 -->
+        <div class="decoration circle circle-1"></div>
+        <div class="decoration circle circle-2"></div>
+
+        <!-- 页面1: 初始文字 -->
+        <div class="page active" id="page1">
+            <div class="main-text" id="main-text">不愧是孚比酱呢！<br>藏得很隐蔽都能找到这里，我们孚比酱超聪明！<br>欢迎孚比酱来到白锦女士为您专属制作的小网站！</div>
+
+            <button class="next-btn" id="next-btn-1" style="display: none;">下一步</button>
+
+            <div style="
+        color: black;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        line-height: 1.5;
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        max-width: 200px;
+        margin-left: auto;
+        margin-right: auto;
+    ">
+                在留言界面，按F12，输入secretMessage()
+            </div>
+        </div>
+
+        <!-- 页面2: 数字输入 -->
+        <div class="page" id="page2">
+            <div class="sub-text">你看到了一些数字对吧？输入进来吧！</div>
+            <div class="input-container">
+                <input type="text" class="input-box" id="number-input" placeholder="请输入你看到的数字">
+                <button class="next-btn" id="next-btn-2">确认</button>
+            </div>
+        </div>
+
+        <!-- 页面2.5: 数字验证成功展示 -->
+        <div class="page" id="page25">
+            <div class="success-container">
+                <div class="text-side">
+                    <div class="success-text">2024年11月12日</div>
+                    <div class="success-message">这一天，你玩你的手机<br>我玩我的手机<br>我们就这样在QQ空间相识了！</div>
+                </div>
+                <div class="image-side">
+                    <div class="image-frame" id="image-frame">
+                        <img src="time.jpg" alt="是QQ截图！" class="custom-image">
+                    </div>
+                    <div class="image-caption">那两个共友到底是谁啊！</div>
+                </div>
+            </div>
+            <button class="next-btn" id="next-btn-25">继续</button>
+        </div>
+
+        <!-- 页面3: 纪念日问题 -->
+        <div class="page" id="page3">
+            <div class="sub-text">那时，白锦女士在QQ空间刷到了你的扩列条</div>
+            <div class="sub-text" style="font-size: 1.6rem; margin-top: 10px;">还记得我是被什么吸引来的吗</div>
+            <div class="input-container">
+                <input type="text" class="input-box" id="memory-input" placeholder="请输入答案">
+                <button class="next-btn" id="next-btn-3">确认</button>
+            </div>
+            <div class="small-text">两个字或四个字母，回忆一下吧？你一定记得！</div>
+        </div>
+
+        <!-- 页面3.5: 聊天记录展示 -->
+        <div class="page" id="page35" style="
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    width: 100vw !important;
+    height: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background-color: #0a0a0a;
+    z-index: 100 !important;
+    padding: 40px 20px !important;
+">
+            <div class="chat-container" style="
+        max-width: none !important;
+        width: 100% !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+    ">
+                <div class="chat-title" style="margin-bottom: 30px !important; font-size: 2.2rem !important;">
+                    这是我们刚加好友时的聊天记录！仿佛遇见家人了！
+                </div>
+                <div class="chat-images" style="
+            width: 100vw !important;
+            min-width: 100vw !important;
+            max-width: none !important;
+            justify-content: center !important;
+            padding: 0 20px !important;
+            margin-bottom: 20px !important;
+        ">
+                    <div class="chat-image-frame" style="width: 260px !important; height: 500px !important;">
+                        <img src="chat1.png" alt="聊天记录1" class="chat-image">
+                    </div>
+                    <div class="chat-image-frame" style="width: 260px !important; height: 500px !important;">
+                        <img src="chat2.png" alt="聊天记录2" class="chat-image">
+                    </div>
+                    <div class="chat-image-frame" style="width: 260px !important; height: 500px !important;">
+                        <img src="chat3.png" alt="聊天记录3" class="chat-image">
+                    </div>
+                    <div class="chat-image-frame" style="width: 260px !important; height: 500px !important;">
+                        <img src="chat4.png" alt="聊天记录4" class="chat-image">
+                    </div>
+                </div>
+                <button class="next-btn" id="next-btn-35" style="margin-top: 30px !important;">继续</button>
+            </div>
+        </div>
+
+        <!-- 页面4: 色块解谜 -->
+        <div class="page" id="page4">
+            <div class="sub-text">原来你都记得！</div>
+            <div class="sub-text" style="margin-top: 10px;">你还在盒子里看到了什么呢？</div>
+            <div class="color-blocks-container">
+                <div class="color-block" id="color-pink" style="background-color: #ff1493;"><i class="fas fa-heart"></i>
+                </div>
+                <div class="color-block" id="color-yellow" style="background-color: #FFD700;"><i
+                        class="fas fa-star"></i></div>
+                <div class="color-block" id="color-blue" style="background-color: #1E90FF;"><i class="fas fa-gem"></i>
+                </div>
+            </div>
+            <div class="small-text" style="margin-top: 30px;">按照正确的顺序点击色块吧</div>
+        </div>
+
+        <!-- 页面7: sghs次数 -->
+        <div class="page" id="page7">
+            <div class="sub-text">我们在2025年1月，一共说了多少次"sghs"呢？</div>
+            <div class="input-container">
+                <input type="text" class="input-box" id="sghs-input" placeholder="请输入数字">
+                <button class="next-btn" id="next-btn-7">确认</button>
+            </div>
+            <div class="small-text">在哪里可以查找呢...</div>
+        </div>
+
+        <!-- 页面8: 高超次数 -->
+        <div class="page" id="page8">
+            <div class="sub-text">我们在2025年中，提到了多少次高超呢？</div>
+            <div class="input-container">
+                <input type="text" class="input-box" id="gaochao-input" placeholder="请输入数字">
+                <button class="next-btn" id="next-btn-8">确认</button>
+            </div>
+            <div class="small-text">不要有顾虑啦，放心去喜欢他们吧！</div>
+        </div>
+
+        <!-- 页面9: 奖状展示 -->
+        <div class="page" id="page9">
+            <div class="sub-text" style="font-size: 2.2rem; color: #ff1493; margin-bottom: 20px;">
+                特此为孚比准备了独一份的奖状<br>希望未来的孚比酱，嬷出未来，嬷得精彩！
+            </div>
+            <div class="image-frame" style="max-width: 500px; height: 350px; margin: 20px auto;">
+                <img src="jiangzhuang.jpg" alt="专属奖状" class="custom-image">
+            </div>
+            <div class="sub-text" style="font-size: 1.6rem; margin-top: 30px; color: #ff69b4; font-style: italic;">
+                什么，你是想保存吗？小窗发送“白锦大美女”即可获得原图哦！
+            </div>
+            <button class="next-btn" id="next-btn-9">继续</button>
+        </div>
+
+        <!-- 页面10: 附加题 -->
+        <div class="page" id="page10">
+            <div class="sub-text">附加题！</div>
+            <div class="sub-text" style="font-size: 1.8rem; margin-top: 10px;">在2025年1月中，我们提到多少次"u1"呢？</div>
+            <div class="input-container">
+                <input type="text" class="input-box" id="u1-input" placeholder="请输入数字">
+                <button class="next-btn" id="next-btn-10">确认</button>
+            </div>
+            <div class="small-text">孚比！这是我最后的题目了！</div>
+        </div>
+
+        <!-- 页面11: 图片回忆 -->
+        <div class="page" id="page11" style="
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    width: 100vw !important;
+    height: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background-color: #0a0a0a;
+    z-index: 100 !important;
+    padding: 40px 20px !important;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+">
+            <!-- 上方文字 -->
+            <div style="
+        font-size: 2.5rem;
+        color: #ff1493;
+        text-shadow: 0 0 15px rgba(255, 20, 147, 0.7);
+        margin-bottom: 40px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-align: center;
+        padding: 0 20px;
+        line-height: 1.4;
+    ">
+                真的很喜欢你的幽默！<br>不懂的人都永别吧！
+            </div>
+
+            <!-- 四张图片一横排 - 模仿页面3.5 -->
+            <div style="
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: center;
+        gap: 20px;
+        margin: 0 auto;
+        width: 100vw !important;
+        min-width: 100vw !important;
+        max-width: none !important;
+        padding: 0 20px !important;
+        overflow-x: auto;
+    ">
+                <!-- 图片1 -->
+                <div style="
+            width: 260px !important;
+            height: 350px !important;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        ">
+                    <img src="x1.jpg" alt="回忆1" style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 13px;
+            ">
+                </div>
+
+                <!-- 图片2 -->
+                <div style="
+            width: 260px !important;
+            height: 350px !important;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        ">
+                    <img src="x2.jpg" alt="回忆2" style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 13px;
+            ">
+                </div>
+
+                <!-- 图片3 -->
+                <div style="
+            width: 260px !important;
+            height: 350px !important;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        ">
+                    <img src="x3.jpg" alt="回忆3" style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 13px;
+            ">
+                </div>
+
+                <!-- 图片4 -->
+                <div style="
+            width: 260px !important;
+            height: 350px !important;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.3);
+            border: 2px solid #ff1493;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        ">
+                    <img src="x4.jpg" alt="回忆4" style="
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 13px;
+            ">
+                </div>
+            </div>
+
+            <!-- 继续按钮 -->
+            <button class="next-btn" id="next-btn-11" style="margin-top: 40px !important;">继续</button>
+        </div>
+
+        <!-- 页面5: 信封 -->
+        <div class="page" id="page5">
+            <div class="sub-text">恭喜你通关了这个独属于你的小解谜游戏！</div>
+            <div class="sub-text" style="font-size: 1.4rem; margin-top: 10px;">点击下面的信封查收给你的惊喜</div>
+
+            <div class="envelope-container" id="envelope-container">
+                <div class="envelope">
+                    <div class="letter">
+                        <i class="fas fa-play-circle"></i>
+                        <p>点击播放</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-container" id="video-container">
+                <video id="memory-video" controls>
+                    <source src="video.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放，请尝试使用Chrome、Firefox或Edge浏览器。
+                </video>
+            </div>
+        </div>
+
+        <!-- 页面6: 留言系统 -->
+        <div class="page" id="page6">
+            <div class="message-system">
+                <div class="message-title">留下你的心里话吧！</div>
+
+                <div class="message-form">
+                    <div class="form-group">
+                        <label class="form-label" for="visitor-message">留言内容：</label>
+                        <textarea id="visitor-message" class="form-textarea" placeholder="想对白锦说些什么呢..."></textarea>
+                    </div>
+
+                    <button class="submit-btn" id="submit-message">提交到GitHub留言板</button>
+                    <div class="message-success" id="message-success">留言已提交到GitHub！我会看到的哦！</div>
+                </div>
+
+                <!-- 管理员查看区域（默认隐藏） -->
+                <div class="admin-section" id="admin-section" style="display: none;">
+                    <div class="admin-title">留言管理（仅管理员可见）</div>
+                    <div class="message-list" id="message-list">
+                        <!-- 留言会动态显示在这里 -->
+                    </div>
+                    <button class="next-btn" id="admin-back-btn">返回主页面</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="message" id="message"></div>
+
+    <script>
+        // 页面元素
+        const pages = document.querySelectorAll('.page');
+        const nextBtn1 = document.getElementById('next-btn-1');
+        const nextBtn2 = document.getElementById('next-btn-2');
+        const nextBtn3 = document.getElementById('next-btn-3');
+        const nextBtn25 = document.getElementById('next-btn-25');
+        const nextBtn35 = document.getElementById('next-btn-35');
+        // 🆕 新增按钮变量
+        const nextBtn7 = document.getElementById('next-btn-7');
+        const nextBtn8 = document.getElementById('next-btn-8');
+        const nextBtn9 = document.getElementById('next-btn-9');
+        const nextBtn10 = document.getElementById('next-btn-10');
+        const nextBtn11 = document.getElementById('next-btn-11');
+        const numberInput = document.getElementById('number-input');
+        const memoryInput = document.getElementById('memory-input');
+        // 🆕 新增输入框变量
+        const sghsInput = document.getElementById('sghs-input');
+        const gaochaoInput = document.getElementById('gaochao-input');
+        const u1Input = document.getElementById('u1-input');
+        const colorBlocks = document.querySelectorAll('.color-block');
+        const envelopeContainer = document.getElementById('envelope-container');
+        const videoContainer = document.getElementById('video-container');
+        const memoryVideo = document.getElementById('memory-video');
+        const message = document.getElementById('message');
+        const submitMessageBtn = document.getElementById('submit-message');
+        const messageSuccess = document.getElementById('message-success');
+        const adminSection = document.getElementById('admin-section');
+        const messageList = document.getElementById('message-list');
+        const adminBackBtn = document.getElementById('admin-back-btn');
+
+        // 游戏状态
+        let currentPage = 1;
+        const colorSequence = ['pink', 'blue', 'yellow'];
+        let userColorSequence = [];
+        let isTransitioning = false;
+
+        // GitHub配置 - 修改这里为你的信息s
+        const GITHUB_CONFIG = {
+            owner: 'BaiJin0412',  // 修改为你的GitHub用户名
+            repo: 'ToFriends',         // 修改为你的仓库名
+            issueLabel: '留言'
+        };
+        // 留言数据存储（实际使用中应该用服务器存储）
+        let messages = JSON.parse(localStorage.getItem('game_messages') || '[]');
+
+        // 初始页面显示"下一步"按钮
+        setTimeout(() => {
+            nextBtn1.style.display = 'block';
+            nextBtn1.style.animation = 'textSlideUp 0.8s 0.2s both';
+        }, 3000);
+
+        // 修复的页面切换函数
+        function goToPage(pageNumber) {
+            if (isTransitioning || pageNumber === currentPage) return;
+
+            isTransitioning = true;
+
+            // 处理页面ID
+            let currentPageId = `page${currentPage}`;
+            if (currentPage === 2.5) currentPageId = 'page25';
+            if (currentPage === 3.5) currentPageId = 'page35';
+
+            let newPageId = `page${pageNumber}`;
+            if (pageNumber === 2.5) newPageId = 'page25';
+            if (pageNumber === 3.5) newPageId = 'page35';
+
+            // 当前页面退出动画
+            const currentPageEl = document.getElementById(currentPageId);
+            currentPageEl.classList.add('exiting');
+            currentPageEl.classList.remove('active');
+
+            // 添加动画延迟
+            setTimeout(() => {
+                // 移除退出动画类
+                currentPageEl.classList.remove('exiting');
+
+                // 显示新页面
+                const newPageEl = document.getElementById(newPageId);
+                newPageEl.classList.add('active');
+
+                // 更新当前页面
+                currentPage = pageNumber;
+
+                // 为新页面元素添加进入动画
+                const textElements = newPageEl.querySelectorAll('.sub-text, .small-text, .input-container, .color-blocks-container, .envelope-container, .success-container, .chat-container, .message-system');
+                textElements.forEach((el, index) => {
+                    el.style.animationDelay = `${0.2 + index * 0.15}s`;
+                });
+
+                // 更新装饰元素位置
+                updateDecorationPosition(pageNumber);
+
+                // 如果是留言页面，不自动加载留言
+                if (pageNumber === 6) {
+                    // 这里什么也不做，留言不会自动显示
+                    document.getElementById('view-github-link').href = `https://github.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues`;
+                }
+
+                // 完成切换
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 300);
+
+            }, 600);
+        }
+
+        // 更新装饰元素位置
+        function updateDecorationPosition(pageNumber) {
+            const circle1 = document.querySelector('.circle-1');
+            const circle2 = document.querySelector('.circle-2');
+
+            // 根据页面不同调整装饰元素位置
+            switch (pageNumber) {
+                case 1:
+                    circle1.style.top = '-50px';
+                    circle1.style.left = '-50px';
+                    circle2.style.bottom = '-60px';
+                    circle2.style.right = '-40px';
+                    break;
+                case 2:
+                    circle1.style.top = '20px';
+                    circle1.style.left = '-30px';
+                    circle2.style.bottom = '20px';
+                    circle2.style.right = '-30px';
+                    break;
+                case 2.5:
+                    circle1.style.top = '30%';
+                    circle1.style.left = '10%';
+                    circle2.style.bottom = '30%';
+                    circle2.style.right = '10%';
+                    break;
+                case 3:
+                    circle1.style.top = '-30px';
+                    circle1.style.left = '60%';
+                    circle2.style.bottom = '-40px';
+                    circle2.style.right = '60%';
+                    break;
+                case 3.5:
+                    circle1.style.top = '20%';
+                    circle1.style.left = '5%';
+                    circle2.style.bottom = '20%';
+                    circle2.style.right = '5%';
+                    break;
+                case 4:
+                    circle1.style.top = '50%';
+                    circle1.style.left = '-40px';
+                    circle2.style.bottom = '50%';
+                    circle2.style.right = '-40px';
+                    break;
+                case 7:
+                case 8:
+                case 10:
+                    circle1.style.top = '25%';
+                    circle1.style.left = '10%';
+                    circle2.style.bottom = '25%';
+                    circle2.style.right = '10%';
+                    break;
+                case 9:
+                    circle1.style.top = '30%';
+                    circle1.style.left = '20%';
+                    circle2.style.bottom = '30%';
+                    circle2.style.right = '20%';
+                case 5:
+                    circle1.style.top = '10%';
+                    circle1.style.left = '10%';
+                    circle2.style.bottom = '10%';
+                    circle2.style.right = '10%';
+                    break;
+                case 6:
+                    circle1.style.top = '15%';
+                    circle1.style.left = '15%';
+                    circle2.style.bottom = '15%';
+                    circle2.style.right = '15%';
+                    break;
+
+            }
+        }
+
+        // 显示消息函数
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+
+        // 第一步：点击下一步按钮
+        nextBtn1.addEventListener('click', () => {
+            goToPage(2);
+        });
+
+        // 第二步：数字验证
+        nextBtn2.addEventListener('click', () => {
+            const inputValue = numberInput.value.trim();
+
+            if (inputValue === '1112') {
+                showMessage('答对啦！', 'success');
+                setTimeout(() => {
+                    goToPage(2.5); // 跳转到第2.5页
+                }, 1500);
+            } else {
+                showMessage('答案不对哦，再找找吧！', 'error');
+                numberInput.style.animation = 'none';
+                setTimeout(() => {
+                    numberInput.style.animation = 'shake 0.5s';
+                }, 10);
+                setTimeout(() => {
+                    numberInput.style.animation = '';
+                }, 500);
+
+                numberInput.value = '';
+                numberInput.focus();
+            }
+        });
+
+        // 第二步：支持回车键
+        numberInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                nextBtn2.click();
+            }
+        });
+
+        // 第二步半：继续按钮
+        nextBtn25.addEventListener('click', () => {
+            goToPage(3);
+        });
+
+        // 第三步：记忆验证
+        nextBtn3.addEventListener('click', () => {
+            const inputValue = memoryInput.value.trim().toLowerCase();
+
+            if (inputValue === '野神' || inputValue === 'onkm') {
+                showMessage('正确！', 'success');
+                setTimeout(() => {
+                    goToPage(3.5); // 跳转到聊天记录页面
+                }, 1500);
+            } else {
+                showMessage('是哪两个人呢，再想想看吧？', 'error');
+                memoryInput.style.animation = 'none';
+                setTimeout(() => {
+                    memoryInput.style.animation = 'shake 0.5s';
+                }, 10);
+                setTimeout(() => {
+                    memoryInput.style.animation = '';
+                }, 500);
+
+                memoryInput.value = '';
+                memoryInput.focus();
+            }
+        });
+
+        // 第三步：支持回车键
+        memoryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                nextBtn3.click();
+            }
+        });
+
+        // 第三步半：继续按钮（从聊天记录页面）
+        nextBtn35.addEventListener('click', () => {
+            goToPage(4);
+        });
+
+        // 第四步：色块解谜
+        colorBlocks.forEach(block => {
+            block.addEventListener('click', () => {
+                if (isTransitioning) return;
+
+                // 添加点击效果
+                block.classList.add('clicked');
+                setTimeout(() => {
+                    block.classList.remove('clicked');
+                }, 300);
+
+                // 获取色块ID
+                const colorId = block.id.replace('color-', '');
+                userColorSequence.push(colorId);
+
+                // 激活当前点击的色块
+                block.classList.add('active');
+
+                // 检查序列
+                if (userColorSequence.length === colorSequence.length) {
+                    // 验证序列
+                    const isCorrect = userColorSequence.every((color, index) => color === colorSequence[index]);
+
+                    if (isCorrect) {
+                        // 正确：显示所有色块激活状态
+                        setTimeout(() => {
+                            showMessage('顺序正确！', 'success');
+                            // 添加庆祝动画
+                            colorBlocks.forEach(b => {
+                                b.style.animation = 'celebrate 0.5s ease';
+                            });
+
+                            setTimeout(() => {
+                                colorBlocks.forEach(b => {
+                                    b.style.animation = '';
+                                });
+                                goToPage(7);
+                            }, 1500);
+                        }, 500);
+                    } else {
+                        // 错误：重置
+                        showMessage('顺序不对哦，再试一次！', 'error');
+
+                        // 添加错误动画
+                        colorBlocks.forEach(b => {
+                            b.style.animation = 'shake 0.5s';
+                        });
+
+                        // 重置色块激活状态
+                        setTimeout(() => {
+                            colorBlocks.forEach(b => {
+                                b.classList.remove('active');
+                                b.style.animation = '';
+                            });
+                            userColorSequence = [];
+                        }, 1000);
+                    }
+                }
+            });
+        });
+
+        // 页面7: sghs次数验证
+        nextBtn7.addEventListener('click', () => {
+            const inputValue = document.getElementById('sghs-input').value.trim();
+            if (inputValue === '31') {
+                showMessage('正确！', 'success');
+                setTimeout(() => {
+                    goToPage(8);
+                }, 1500);
+            } else {
+                showMessage('再数数看？', 'error');
+                const input = document.getElementById('sghs-input');
+                input.style.animation = 'none';
+                setTimeout(() => {
+                    input.style.animation = 'shake 0.5s';
+                }, 10);
+                setTimeout(() => {
+                    input.style.animation = '';
+                    input.value = '';
+                    input.focus();
+                }, 500);
+            }
+        });
+
+
+        // 页面8: 高超次数验证
+        nextBtn8.addEventListener('click', () => {
+            const inputValue = document.getElementById('gaochao-input').value.trim();
+            if (inputValue === '6') {
+                showMessage('好棒！', 'success');
+                setTimeout(() => {
+                    goToPage(9);
+                }, 1500);
+            } else {
+                showMessage('再数数看？', 'error');
+                const input = document.getElementById('gaochao-input');
+                input.style.animation = 'none';
+                setTimeout(() => {
+                    input.style.animation = 'shake 0.5s';
+                }, 10);
+                setTimeout(() => {
+                    input.style.animation = '';
+                    input.value = '';
+                    input.focus();
+                }, 500);
+            }
+        });
+
+
+        // 页面9: 奖状页面继续按钮
+        nextBtn9.addEventListener('click', () => {
+            goToPage(10);
+        });
+
+
+        // 页面10: u1次数验证
+        nextBtn10.addEventListener('click', () => {
+            const inputValue = document.getElementById('u1-input').value.trim();
+            if (inputValue === '18') {
+                showMessage('孚比酱好厉害！', 'success');
+                setTimeout(() => {
+                    goToPage(11);  // 跳转到页面11
+                }, 1500);
+            } else {
+                showMessage('再数数看？', 'error');
+                const input = document.getElementById('u1-input');
+                input.style.animation = 'none';
+                setTimeout(() => {
+                    input.style.animation = 'shake 0.5s';
+                }, 10);
+                setTimeout(() => {
+                    input.style.animation = '';
+                    input.value = '';
+                    input.focus();
+                }, 500);
+            }
+        });
+
+
+        // 支持回车键
+        if (document.getElementById('sghs-input')) {
+            document.getElementById('sghs-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    nextBtn7.click();
+                }
+            });
+        }
+
+        if (document.getElementById('gaochao-input')) {
+            document.getElementById('gaochao-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    nextBtn8.click();
+                }
+            });
+        }
+
+        if (document.getElementById('u1-input')) {
+            document.getElementById('u1-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    nextBtn10.click();
+                }
+            });
+        }
+
+        // 第五步：信封点击播放视频
+        envelopeContainer.addEventListener('click', () => {
+            // 隐藏信封，显示视频
+            envelopeContainer.style.animation = 'pageExit 0.8s forwards';
+
+            setTimeout(() => {
+                envelopeContainer.style.display = 'none';
+                videoContainer.style.display = 'block';
+
+                // 视频播放结束后跳转到留言页面
+                memoryVideo.addEventListener('ended', () => {
+                    setTimeout(() => {
+                        goToPage(6);
+                    }, 2000);
+                });
+
+                // 开始播放视频
+                memoryVideo.play().catch(e => {
+                    console.log('自动播放被阻止，需要用户手动点击');
+                    showMessage('请点击视频播放按钮开始播放', 'success');
+                });
+            }, 800);
+        });
+        ;
+        // 留言提交功能
+        submitMessageBtn.addEventListener('click', () => {
+            const content = document.getElementById('visitor-message').value.trim();
+
+            // 检查留言内容是否为空
+            if (!content) {
+                showMessage('真的不对我说些什么吗！', 'error');
+                return;
+            }
+
+            // 创建GitHub Issue链接
+            const title = encodeURIComponent(`留言：${new Date().toLocaleDateString()}`);
+            const body = encodeURIComponent(`**留言内容：**\n\n${content}\n\n---\n*提交时间：${new Date().toLocaleString('zh-CN')}*`);
+            const labels = encodeURIComponent(GITHUB_CONFIG.issueLabel);
+
+            const issueUrl = `https://github.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues/new?title=${title}&body=${body}&labels=${labels}`;
+
+            // 在新窗口打开GitHub创建Issue页面
+            window.open(issueUrl, '_blank');
+
+            // 显示成功消息
+            showMessage('已打开GitHub留言页面，请提交！', 'success');
+            document.getElementById('visitor-message').value = '';
+        });
+
+        // 显示留言
+        function displayMessages() {
+            messageList.innerHTML = '';
+
+            if (messages.length === 0) {
+                messageList.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">还没有留言，快来第一个留言吧！</div>';
+                return;
+            }
+
+            // 按时间倒序显示留言
+            messages.sort((a, b) => b.id - a.id);
+
+            messages.forEach(msg => {
+                const messageItem = document.createElement('div');
+                messageItem.className = 'message-item';
+                messageItem.innerHTML = `
+                    <div class="message-header">
+                        <span>${msg.name}</span>
+                        <span>${msg.time}</span>
+                    </div>
+                    <div class="message-content">${msg.content}</div>
+                `;
+                messageList.appendChild(messageItem);
+            });
+        }
+
+        // 加载GitHub留言
+        async function loadGitHubMessages() {
+            try {
+                // 使用GitHub API获取留言
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues?labels=${GITHUB_CONFIG.issueLabel}&state=open`);
+
+                if (!response.ok) {
+                    throw new Error('获取留言失败');
+                }
+
+                const issues = await response.json();
+                displayGitHubMessages(issues);
+            } catch (error) {
+                console.error('加载留言失败:', error);
+                document.getElementById('github-messages').innerHTML = `
+            <div class="error-message">
+                加载留言失败<br>
+                <small>你可以直接访问：<a href="https://github.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues" target="_blank" style="color:#ff69b4">GitHub留言板</a></small>
+            </div>
+        `;
+            }
+        }
+
+        // 显示GitHub留言
+        function displayGitHubMessages(issues) {
+            const githubMessages = document.getElementById('github-messages');
+
+            if (!issues || issues.length === 0) {
+                githubMessages.innerHTML = '<div class="loading-messages">还没有留言，快来第一个留言吧！</div>';
+                return;
+            }
+
+            // 过滤掉pull request，只显示issues
+            const messages = issues.filter(issue => !issue.pull_request);
+
+            if (messages.length === 0) {
+                githubMessages.innerHTML = '<div class="loading-messages">还没有留言，快来第一个留言吧！</div>';
+                return;
+            }
+
+            // 按创建时间倒序排序
+            messages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // 限制显示数量
+            const displayMessages = messages.slice(0, 10);
+
+            let html = '';
+            displayMessages.forEach(issue => {
+                // 从Issue body中提取留言内容
+                const body = issue.body || '';
+                const contentMatch = body.match(/\*\*留言内容：\*\*\s*\n\n([\s\S]*?)\n\n---/);
+                const content = contentMatch ? contentMatch[1].trim() : body;
+
+                // 解析时间
+                const timeMatch = body.match(/\*提交时间：([^*]+)\*/);
+                const time = timeMatch ? timeMatch[1] : new Date(issue.created_at).toLocaleString('zh-CN');
+
+                html += `
+            <div class="github-message-item">
+                <div class="github-message-header">
+                    <span>孚比酱</span>
+                    <span>${time}</span>
+                </div>
+                <div class="github-message-content">${escapeHtml(content)}</div>
+                <div style="margin-top: 10px; font-size: 0.8rem; color: #888;">
+                    <a href="${issue.html_url}" target="_blank" style="color: #ff69b4;">
+                        在GitHub上查看详情
+                    </a>
+                </div>
+            </div>
+        `;
+            });
+
+            githubMessages.innerHTML = html;
+        }
+
+        // HTML转义函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 🎮 彩蛋模式：按F12输入 secretMessage() 查看隐藏留言
+        window.secretMessage = function () {
+            // 1. 显示管理员区域
+            adminSection.style.display = 'block';
+
+            // 2. 清空旧的显示区域
+            const messageList = document.getElementById('message-list');
+            messageList.innerHTML = '<div class="loading-messages">正在解封隐藏留言...</div>';
+
+            // 3. 显示你的隐藏留言（直接写死在代码里，不依赖GitHub）
+            setTimeout(() => {
+                const secretMessages = [
+                    {
+                        name: '白锦',
+                        time: '2026年1月4日',
+                        content: '这里是小彩蛋！ 被找到了呢，不愧是聪明的孚比酱！<br>不知道这个网站会不会让你感到惊喜呢！<br>是我和deepseek一起做的，聊天上限了好多次呢！www<br>网页做得比较简陋，希望你不要介意，这个网页是我在办公室偷偷摸鱼做的，嘿嘿！<br>因为最近在做网页解谜游戏嘛，所以在给你准备礼物时就迸发了这样的灵感！<br>就像是上次那个安静书的升级版~ 这里是独属于你我的网站，希望你会喜欢！<br>如果以后还有想对我说的话，可以到这个网站继续留言哦，我会看到的！<br>以上 from 手巧锦'
+                    },
+                ];
+
+                let html = '';
+                secretMessages.forEach(msg => {
+                    html += `
+                <div class="message-item">
+                    <div class="message-header">
+                        <span style="color:#ff1493;">${msg.name}</span>
+                        <span>${msg.time}</span>
+                    </div>
+                    <div class="message-content">${msg.content}</div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:#ff69b4;">
+                        <i class="fas fa-lock"></i> 隐藏留言 · 仅你可见
+                    </div>
+                </div>
+            `;
+                });
+
+                messageList.innerHTML = html;
+
+                // 4. 显示成功消息
+                showMessage('✨ 隐藏留言已解锁！', 'success');
+
+            }, 800); // 稍微延迟，营造“解封”效果
+        };
+
+        // 保留旧的showAdmin函数（可选，可以删除）
+        window.showAdmin = function () {
+            adminSection.style.display = 'block';
+            displayMessages(); // 这个显示的是本地留言
+        };
+
+        // 管理员返回按钮
+        adminBackBtn.addEventListener('click', () => {
+            adminSection.style.display = 'none';
+        });
+
+        // 添加一些动态效果
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始文字动画
+            const mainText = document.getElementById('main-text');
+        });
+        // 页面11: 继续按钮
+        if (nextBtn11) {
+            nextBtn11.addEventListener('click', () => {
+                goToPage(5);  // 从页面11跳转到信封页面
+            });
+        }
+    </script>
+</body>
+
+</html>
